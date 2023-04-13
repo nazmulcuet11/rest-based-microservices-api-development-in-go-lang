@@ -3,15 +3,10 @@ package app
 import (
 	"abank/service"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
 )
-
-func greet(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Welcome to the bank!")
-}
 
 type CustomerHandler struct {
 	service service.CustomerService

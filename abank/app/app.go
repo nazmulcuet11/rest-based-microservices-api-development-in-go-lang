@@ -20,8 +20,6 @@ func Start() {
 	ch := CustomerHandler{service: service.NewDefaultCustomerService(domain.NewCustomerRepositoryDB())}
 
 	// define routes
-	router.HandleFunc("/", greet).Methods(http.MethodGet)
-	router.HandleFunc("/greet", greet).Methods(http.MethodGet)
 	router.HandleFunc("/customers", ch.getCustomerList).Methods(http.MethodGet)
 	router.HandleFunc("/customer/{customer_id:[0-9]+}", ch.getCustomer).Methods(http.MethodGet)
 
