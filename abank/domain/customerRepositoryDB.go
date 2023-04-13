@@ -2,7 +2,9 @@ package domain
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"abank/errs"
@@ -17,7 +19,16 @@ type CustomerRepositoryDB struct {
 }
 
 func NewCustomerRepositoryDB() CustomerRepositoryDB {
-	db, err := sqlx.Open("mysql", "root:    @tcp(localhost:3306)/abank")
+	dbAddr := os.Getenv("DB_ADDR")
+	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("DB_USER")
+	dbPass := os.Getenv("DB_PASS")
+	dbName := os.Getenv("DB_NAME")
+
+	dbCred := fmt.Sprintf("%v:%v", dbUser, dbPass)
+	dbPath := fmt.Sprintf("tcp(%v:%v)/%v", dbAddr, dbPort, dbName)
+	connString := fmt.Sprintf("%v@%v", dbCred, dbPath)
+	db, err := sqlx.Open("mysql", connString)
 	if err != nil {
 		panic(err)
 	}
@@ -26,6 +37,7 @@ func NewCustomerRepositoryDB() CustomerRepositoryDB {
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(10)
 
+	logger.Info(fmt.Sprintf("Connected to DB: %v", dbPath))
 	return CustomerRepositoryDB{db: db}
 }
 
