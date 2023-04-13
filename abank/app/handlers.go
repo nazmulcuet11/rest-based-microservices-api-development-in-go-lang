@@ -1,0 +1,52 @@
+package app
+
+import (
+	"abank/service"
+	"encoding/json"
+	"fmt"
+	"net/http"
+
+	"github.com/gorilla/mux"
+)
+
+func greet(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Welcome to the bank!")
+}
+
+type CustomerHandler struct {
+	service service.CustomerService
+}
+
+func NewCustomerHandler(service service.CustomerService) CustomerHandler {
+	return CustomerHandler{service: service}
+}
+
+func (ch *CustomerHandler) getCustomerList(w http.ResponseWriter, r *http.Request) {
+	status := r.URL.Query().Get("status")
+	customers, err := ch.service.GetAllCustomers(status)
+	if err != nil {
+		writeResponse(w, err.Code, err.AsMessage())
+	} else {
+		writeResponse(w, http.StatusOK, customers)
+	}
+}
+
+func (ch *CustomerHandler) getCustomer(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	customerId := vars["customer_id"]
+	customer, err := ch.service.GetCustmerBy(customerId)
+	if err != nil {
+		writeResponse(w, err.Code, err.AsMessage())
+	} else {
+		writeResponse(w, http.StatusOK, customer)
+	}
+}
+
+func writeResponse(w http.ResponseWriter, code int, data interface{}) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(code)
+	err := json.NewEncoder(w).Encode(data)
+	if err != nil {
+		panic(err)
+	}
+}
