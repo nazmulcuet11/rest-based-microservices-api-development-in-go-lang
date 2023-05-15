@@ -9,6 +9,7 @@ import (
 
 type AccountService interface {
 	NewAccount(dto.NewAccountRequest) (*dto.NewAccountResponse, *errs.AppError)
+	MakeTransaction(dto.TransactionRequest) (*dto.TransactionResponse, *errs.AppError)
 }
 
 type DefaultAccountService struct {
@@ -28,7 +29,7 @@ func (s DefaultAccountService) NewAccount(req dto.NewAccountRequest) (*dto.NewAc
 	account := domain.Account{
 		CustomerId:  req.CustomerId,
 		OpeningDate: time.Now().Format("2006-01-02 15:04:05"),
-		AccountType: req.AccountType,
+		Type:        req.AccountType,
 		Amount:      req.Ammount,
 		Status:      "1",
 	}
@@ -38,5 +39,38 @@ func (s DefaultAccountService) NewAccount(req dto.NewAccountRequest) (*dto.NewAc
 		return nil, err
 	}
 	response := newAccount.ToNewAccountResponseDTO()
+	return &response, nil
+}
+
+func (s DefaultAccountService) MakeTransaction(req dto.TransactionRequest) (*dto.TransactionResponse, *errs.AppError) {
+	err := req.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	if req.IsWithdrawl() {
+		acc, err := s.repo.FindBy(req.AccountId)
+		if err != nil {
+			return nil, err
+		}
+
+		if !acc.CanWithDrawAmount(req.Amount) {
+			return nil, errs.NewValidationError("Insufficient balance in the account")
+		}
+	}
+
+	t := domain.Transaction{
+		AccountId: req.AccountId,
+		Amount:    req.Amount,
+		Type:      domain.TransactionType(req.TransactionType),
+		Date:      time.Now().Format("2006-01-02 15:04:05"),
+	}
+
+	transaction, appErr := s.repo.SaveTransaction(t)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	response := transaction.ToTransactionResponseDTO()
 	return &response, nil
 }
