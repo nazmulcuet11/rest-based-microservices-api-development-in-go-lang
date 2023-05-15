@@ -2,10 +2,7 @@ package domain
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
-	"os"
-	"time"
 
 	"abank/errs"
 	"abank/logger"
@@ -18,26 +15,7 @@ type CustomerRepositoryDB struct {
 	db *sqlx.DB
 }
 
-func NewCustomerRepositoryDB() CustomerRepositoryDB {
-	dbAddr := os.Getenv("DB_ADDR")
-	dbPort := os.Getenv("DB_PORT")
-	dbUser := os.Getenv("DB_USER")
-	dbPass := os.Getenv("DB_PASS")
-	dbName := os.Getenv("DB_NAME")
-
-	dbCred := fmt.Sprintf("%v:%v", dbUser, dbPass)
-	dbPath := fmt.Sprintf("tcp(%v:%v)/%v", dbAddr, dbPort, dbName)
-	connString := fmt.Sprintf("%v@%v", dbCred, dbPath)
-	db, err := sqlx.Open("mysql", connString)
-	if err != nil {
-		panic(err)
-	}
-	// See "Important settings" section.
-	db.SetConnMaxLifetime(time.Minute * 3)
-	db.SetMaxOpenConns(10)
-	db.SetMaxIdleConns(10)
-
-	logger.Info(fmt.Sprintf("Connected to DB: %v", dbPath))
+func NewCustomerRepositoryDB(db *sqlx.DB) CustomerRepositoryDB {
 	return CustomerRepositoryDB{db: db}
 }
 
